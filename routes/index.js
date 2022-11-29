@@ -1,4 +1,5 @@
 const express = require('express');
+const userRoutes = require('./users');
 
 const router = express.Router();
 
@@ -6,5 +7,7 @@ const router = express.Router();
 router.get('/', (req, res) => {
   res.render('index', { title: 'Banco Saint Patrick API' });
 });
+
+router.use('/user', userRoutes);
 
 module.exports = router;
