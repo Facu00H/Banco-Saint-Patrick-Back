@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 
 const CreditCardSchema = mongoose.Schema({
   cardNumber: { type: String, required: true },
-  Pin: { type: Number, required: true },
-  Ammount: { type: Number, required: true },
+  PIN: { type: String, required: true },
+  founds: { type: String, required: true },
 });
 
 const CreditCardModel = mongoose.model('CreditCard', CreditCardSchema);
