@@ -1,5 +1,7 @@
 const express = require('express');
 const userRoutes = require('./users');
+const contactRoutes = require('./contact');
+const cardsRouter = require('./creditCard');
 
 const router = express.Router();
 
@@ -9,5 +11,7 @@ router.get('/', (req, res) => {
 });
 
 router.use('/user', userRoutes);
+router.use('/contact', contactRoutes);
+router.use('/cards', cardsRouter);
 
 module.exports = router;
