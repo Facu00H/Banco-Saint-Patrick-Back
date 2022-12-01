@@ -26,16 +26,18 @@ const UserSchema = mongoose.Schema({
     type: String,
     unique: true,
     minLength: [8, 'La contraseña debe tener mas de 8 caracteres'],
-    maxLength: [22, 'La contraseña no debe exceder los 22 caracteres'],
+    select: false,
   },
   creditCards: [{
     type: mongoose.Types.ObjectId,
     required: false,
+    ref: 'CreditCard',
   }],
   transactions: [{
     type: mongoose.Types.ObjectId,
     required: false,
   }],
+  contacts: [{ type: mongoose.Types.ObjectId, ref: 'Contact', required: false }],
 });
 
 const UserModel = mongoose.model('User', UserSchema);
