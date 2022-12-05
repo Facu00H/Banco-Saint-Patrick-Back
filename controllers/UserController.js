@@ -70,26 +70,26 @@ const UserController = {
       password,
     } = req.body;
     try {
-      const user = await User.findOne({ email });
+      const user = await User.findOne({ email }).select('+password');
       if (!user) {
-        res.status(400).json({
+        return res.status(400).json({
           response: 'Unregistered user',
           success: false,
         });
       }
       const succesPass = bcrypt.compareSync(password, user.password);
       if (succesPass) {
-        res.status(200).json({
+        return res.status(200).json({
           response: user,
           success: true,
         });
       }
-      res.status(400).json({
+      return res.status(400).json({
         response: 'wrong password',
         success: false,
       });
     } catch (error) {
-      res.status(400).json({
+      return res.status(400).json({
         response: error.message,
         success: false,
       });
