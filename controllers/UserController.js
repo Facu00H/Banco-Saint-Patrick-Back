@@ -1,6 +1,8 @@
 /* eslint-disable no-underscore-dangle */
 const bcrypt = require('bcryptjs');
+const CreditCardModel = require('../models/CreditCardsSchema');
 const User = require('../models/UserSchema');
+const Transaction = require('../models/TransactionsSchema');
 
 const UserController = {
 
@@ -14,7 +16,7 @@ const UserController = {
     try {
       let user = await User.findOne({ email });
       if (user) {
-        res.status(400).json({
+        return res.status(400).json({
           response: 'User already exists',
           success: false,
         });
@@ -27,13 +29,13 @@ const UserController = {
           email,
           password: pass,
         }).save();
-        res.status(201).json({
+        return res.status(201).json({
           response: user,
           success: true,
         });
       }
     } catch (error) {
-      res.status(400).json({
+      return res.status(400).json({
         response: error.message,
         success: false,
       });
@@ -45,19 +47,24 @@ const UserController = {
       email,
     } = req.body;
     try {
-      const user = await User.findOne({ email }).populate('contacts').populate('creditCards');
+      const user = await User.findOne({ email })
+        .populate(['contacts', 'creditCards'])
+        .populate({
+          path: 'transactions',
+          populate: ['to', 'from'],
+        });
       if (!user) {
-        res.status(400).json({
+        return res.status(400).json({
           response: 'user dont find',
           success: false,
         });
       }
-      res.status(200).json({
+      return res.status(200).json({
         response: user,
         success: true,
       });
     } catch (error) {
-      res.status(400).json({
+      return res.status(400).json({
         response: error.message,
         success: false,
       });
@@ -70,7 +77,12 @@ const UserController = {
       password,
     } = req.body;
     try {
-      const user = await User.findOne({ email }).select('+password');
+      const user = await User.findOne({ email }).select('+password')
+        .populate(['contacts', 'creditCards'])
+        .populate({
+          path: 'transactions',
+          populate: ['to', 'from'],
+        });
       if (!user) {
         return res.status(400).json({
           response: 'Unregistered user',
@@ -88,6 +100,68 @@ const UserController = {
         response: 'wrong password',
         success: false,
       });
+    } catch (error) {
+      return res.status(400).json({
+        response: error.message,
+        success: false,
+      });
+    }
+  },
+
+  transaction: async (req, res) => {
+    const {
+      from,
+      to,
+      ammount,
+    } = req.body;
+    let { date } = req.body;
+    if (!date || date === undefined) {
+      date = new Date();
+    }
+    try {
+      const myCard = await CreditCardModel.findOne({ cardNumber: to });
+      const herCard = await CreditCardModel.findOne({ cardNumber: from });
+      if (!myCard && !herCard) {
+        return res.status(400).json({
+          response: 'cards dont exist',
+          success: true,
+        });
+      }
+      if (ammount <= 0) {
+        return res.status(400).json({
+          response: 'ammount will be more than zero',
+          success: false,
+        });
+      }
+      if (myCard && herCard) {
+        const myUser = await User.findOne({ creditCards: { $in: [myCard._id] } }).populate('creditCards');
+        const herUser = await User.findOne({ creditCards: { $in: [herCard._id] } }).populate('creditCards');
+        if (myCard.founds >= ammount) {
+          const transaction = await new Transaction({
+            from: myUser,
+            to: herUser,
+            date,
+            ammount,
+            success: true,
+          }).save();
+          myCard.founds -= ammount;
+          herCard.founds += ammount;
+          myUser.transactions.push(transaction._id);
+          herUser.transactions.push(transaction._id);
+          myUser.save();
+          herUser.save();
+          myCard.save();
+          herCard.save();
+          return res.status(200).json({
+            response: 'the transaction was completed successfully',
+            success: true,
+          });
+        }
+        return res.status(400).json({
+          response: 'something was wrong',
+          success: false,
+        });
+      }
     } catch (error) {
       return res.status(400).json({
         response: error.message,

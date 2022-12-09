@@ -13,35 +13,33 @@ const creditCardsController = {
 
     try {
       if (!email || !creditCard || !founds || !PINNumber) {
-        res.status(400).json({
+        return res.status(400).json({
           response: 'missing data',
           success: false,
         });
       }
       const user = await User.findOne({ email }).populate('creditCards');
       if (!user) {
-        res.status(400).json({
+        return res.status(400).json({
           response: 'user dont finded',
           success: false,
         });
       }
-      const encryptedCreditCard = await bcrypt.hashSync(creditCard, 10);
-      const encryptedPin = await bcrypt.hashSync(PINNumber, 10);
-      const encryptedFounds = await bcrypt.hashSync(founds, 10);
+      const hashedPin = await bcrypt.hashSync(PINNumber, 10);
       const CreditCard = await new CreditCardSchema({
-        cardNumber: encryptedCreditCard,
-        PIN: encryptedPin,
-        founds: encryptedFounds,
+        cardNumber: creditCard,
+        PIN: hashedPin,
+        founds,
       }).save();
       // eslint-disable-next-line no-underscore-dangle
       user.creditCards.push(CreditCard._id);
       user.save();
-      res.status(200).json({
+      return res.status(200).json({
         response: user,
         success: true,
       });
     } catch (error) {
-      res.status(400).json({
+      return res.status(400).json({
         response: error.message,
         success: false,
       });

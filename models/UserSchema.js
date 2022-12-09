@@ -36,6 +36,7 @@ const UserSchema = mongoose.Schema({
   transactions: [{
     type: mongoose.Types.ObjectId,
     required: false,
+    ref: 'Transaction',
   }],
   contacts: [{ type: mongoose.Types.ObjectId, ref: 'Contact', required: false }],
 });

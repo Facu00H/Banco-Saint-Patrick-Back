@@ -11,7 +11,7 @@ const contactController = {
     } = req.body;
 
     if (!contact.name || !contact.cardNumber) {
-      res.status(400).json({
+      return res.status(400).json({
         response: 'Please insert all the data',
         success: false,
       });
@@ -23,7 +23,7 @@ const contactController = {
       }).save();
       const user = await User.findOne({ email });
       if (!user) {
-        res.status(400).json({
+        return res.status(400).json({
           response: 'The email its not valid',
           success: false,
         });
@@ -31,13 +31,13 @@ const contactController = {
       // eslint-disable-next-line no-underscore-dangle
       user.contacts.push(newContact._id);
       user.save();
-      res.status(200).json({
+      return res.status(200).json({
         response: `The contact ${contact.name} was added succesfully`,
         user,
         success: true,
       });
     } catch (error) {
-      res.status(400).json({
+      return res.status(400).json({
         response: error.message,
         success: false,
       });
