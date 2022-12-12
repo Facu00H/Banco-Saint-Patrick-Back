@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 /* eslint-disable no-underscore-dangle */
 const bcrypt = require('bcryptjs');
 const CreditCardModel = require('../models/CreditCardsSchema');

@@ -18,7 +18,7 @@ const creditCardsController = {
           success: false,
         });
       }
-      const user = await User.findOne({ email }).populate('creditCards');
+      const user = await User.findOne({ email });
       if (!user) {
         return res.status(400).json({
           response: 'user dont finded',
@@ -34,6 +34,7 @@ const creditCardsController = {
       // eslint-disable-next-line no-underscore-dangle
       user.creditCards.push(CreditCard._id);
       user.save();
+      await user.populate('creditCards');
       return res.status(200).json({
         response: user,
         success: true,
