@@ -49,13 +49,62 @@ const creditCardsController = {
 
   // TO DO.
 
-  // removeCreditCard: async (req, res) => {
+  removeCreditCard: async (req, res) => {
+    const {
+      id,
+    } = req.body;
+    try {
+      const creditCard = await CreditCardSchema.findOne({ _id: id });
+      const user = await User.findOne({ creditCards: { $in: [id] } });
+      if (creditCard && user) {
+        // eslint-disable-next-line no-underscore-dangle, eqeqeq
+        const filteredUser = user.creditCards.filter((data) => data._id != id);
+        await CreditCardSchema.findOneAndDelete({ _id: id });
+        user.creditCards = filteredUser;
+        user.save();
+        return res.status(200).json({
+          respose: 'Credit card was removed successfully',
+          success: true,
+        });
+      }
+      return res.status(400).json({
+        response: 'Invalid card id',
+        success: false,
+      });
+    } catch (error) {
+      return res.status(400).json({
+        response: error.message,
+      });
+    }
+  },
 
-  // },
-
-  // addFounds: async (req, res) => {
-
-  // },
+  // eslint-disable-next-line consistent-return
+  addFounds: async (req, res) => {
+    const {
+      id,
+      ammount,
+    } = req.body;
+    const totalAmmount = Number(ammount);
+    try {
+      const creditCard = await CreditCardSchema.findById({ _id: id });
+      creditCard.founds += totalAmmount;
+      creditCard.save();
+      if (creditCard) {
+        return res.status(200).json({
+          response: 'the money was successfully debited',
+          success: true,
+        });
+      }
+      res.status(400).json({
+        response: 'Invalid CreditCard',
+        success: false,
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+      });
+    }
+  },
 };
 
 module.exports = creditCardsController;
