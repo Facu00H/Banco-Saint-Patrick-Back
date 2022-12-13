@@ -115,20 +115,21 @@ const UserController = {
       to,
       ammount,
     } = req.body;
+    const totalAmmount = Number(ammount);
     let { date } = req.body;
     if (!date || date === undefined) {
       date = new Date();
     }
     try {
-      const myCard = await CreditCardModel.findOne({ cardNumber: to });
-      const herCard = await CreditCardModel.findOne({ cardNumber: from });
+      const myCard = await CreditCardModel.findOne({ cardNumber: from });
+      const herCard = await CreditCardModel.findOne({ cardNumber: to });
       if (!myCard && !herCard) {
         return res.status(400).json({
           response: 'cards dont exist',
           success: true,
         });
       }
-      if (ammount <= 0) {
+      if (totalAmmount <= 0) {
         return res.status(400).json({
           response: 'ammount will be more than zero',
           success: false,
@@ -137,7 +138,7 @@ const UserController = {
       if (myCard && herCard) {
         const myUser = await User.findOne({ creditCards: { $in: [myCard._id] } }).populate('creditCards');
         const herUser = await User.findOne({ creditCards: { $in: [herCard._id] } }).populate('creditCards');
-        if (myCard.founds >= ammount) {
+        if (myCard.founds >= totalAmmount) {
           const transaction = await new Transaction({
             from: myUser,
             to: herUser,
@@ -145,8 +146,8 @@ const UserController = {
             ammount,
             success: true,
           }).save();
-          myCard.founds -= ammount;
-          herCard.founds += ammount;
+          myCard.founds -= totalAmmount;
+          herCard.founds += totalAmmount;
           myUser.transactions.push(transaction._id);
           herUser.transactions.push(transaction._id);
           myUser.save();
