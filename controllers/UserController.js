@@ -114,6 +114,7 @@ const UserController = {
       from,
       to,
       ammount,
+      PIN,
     } = req.body;
     const totalAmmount = Number(ammount);
     let { date } = req.body;
@@ -129,38 +130,45 @@ const UserController = {
           success: true,
         });
       }
-      if (totalAmmount <= 0) {
-        return res.status(400).json({
-          response: 'ammount will be more than zero',
-          success: false,
-        });
-      }
-      if (myCard && herCard) {
-        const myUser = await User.findOne({ creditCards: { $in: [myCard._id] } }).populate('creditCards');
-        const herUser = await User.findOne({ creditCards: { $in: [herCard._id] } }).populate('creditCards');
-        if (myCard.founds >= totalAmmount) {
-          const transaction = await new Transaction({
-            from: myUser,
-            to: herUser,
-            date,
-            ammount,
-            success: true,
-          }).save();
-          myCard.founds -= totalAmmount;
-          herCard.founds += totalAmmount;
-          myUser.transactions.push(transaction._id);
-          herUser.transactions.push(transaction._id);
-          myUser.save();
-          herUser.save();
-          myCard.save();
-          herCard.save();
-          return res.status(200).json({
-            response: 'the transaction was completed successfully',
-            success: true,
+      const verifyPin = bcrypt.compareSync(PIN, myCard.pin);
+      if (verifyPin) {
+        if (totalAmmount <= 0) {
+          return res.status(400).json({
+            response: 'ammount will be more than zero',
+            success: false,
+          });
+        }
+        if (myCard && herCard) {
+          const myUser = await User.findOne({ creditCards: { $in: [myCard._id] } }).populate('creditCards');
+          const herUser = await User.findOne({ creditCards: { $in: [herCard._id] } }).populate('creditCards');
+          if (myCard.founds >= totalAmmount) {
+            const transaction = await new Transaction({
+              from: myUser,
+              to: herUser,
+              date,
+              ammount,
+              success: true,
+            }).save();
+            myCard.founds -= totalAmmount;
+            herCard.founds += totalAmmount;
+            myUser.transactions.push(transaction._id);
+            herUser.transactions.push(transaction._id);
+            myUser.save();
+            herUser.save();
+            myCard.save();
+            herCard.save();
+            return res.status(200).json({
+              response: 'the transaction was completed successfully',
+              success: true,
+            });
+          }
+          return res.status(400).json({
+            response: 'something was wrong',
+            success: false,
           });
         }
         return res.status(400).json({
-          response: 'something was wrong',
+          response: 'wrong PIN',
           success: false,
         });
       }
